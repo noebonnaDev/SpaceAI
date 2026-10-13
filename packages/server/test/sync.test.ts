@@ -3,6 +3,9 @@
  * reach Ritrovo through change notifications (webhook) and delta queries.
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Db } from '../src/db/db.js';
+import { getResource } from '../src/domain/resources.js';
+import { SyncService } from '../src/domain/sync.js';
 import { createHarness, local, type Harness } from './harness.js';
 
 const TODAY = '2026-10-14';
@@ -106,6 +109,45 @@ describe('Sincronizzazione Outlook -> Ritrovo', () => {
     await h.settle();
     await h.ctx.sync.syncAll();
     for (const room of ['volta', 'fermi', 'galilei']) expect(await bookingsOf(room)).toHaveLength(1);
+  });
+
+  it('una sincronizzazione concorrente al check-out non riporta la prenotazione a "confermata"', async () => {
+    h.clock.set(local(TODAY, '10:55').toISOString());
+    const created = await h.api('elena.ricci').post('/api/bookings', {
+      resourceId: h.ids.resources.fermi,
+      start: local(TODAY, '11:00').toISOString(),
+      end: local(TODAY, '12:00').toISOString(),
+    });
+    expect(created.status).toBe(201);
+    await h.settle();
+    h.clock.set(local(TODAY, '11:02').toISOString());
+    expect((await h.api('elena.ricci').post(`/api/bookings/${created.body.id}/check-in`)).status).toBe(200);
+    const event = h.fake.eventsOf(mailbox('sala.fermi'))[0]!;
+    const room = await getResource(h.db, h.ids.resources.fermi!);
+
+    // Interleaving: the sync reads the booking (still "confirmed"), the user checks out, then the sync writes.
+    for (const variant of [event, { ...event, isCancelled: true }]) {
+      let interleaved = false;
+      const racingDb: Db = {
+        ...h.db,
+        async query(text: string, params?: unknown[]) {
+          const result = await h.db.query(text, params);
+          if (!interleaved && text.includes('b.ical_uid = $2')) {
+            interleaved = true;
+            h.clock.set(local(TODAY, '11:30').toISOString());
+            await h.db.query(`update booking set status = 'completed', checked_out_at = $2, effective_end_at = $2 where id = $1`, [
+              created.body.id,
+              local(TODAY, '11:30'),
+            ]);
+          }
+          return result as any;
+        },
+      };
+      const sync = new SyncService({ ...h.ctx.bookings['s'], db: racingDb });
+      await sync.upsertFromResourceEvent(room, variant);
+      expect(interleaved).toBe(true);
+      expect((await bookingsOf('fermi'))[0].status).toBe('completed');
+    }
   });
 
   it('webhook: risponde al validationToken e ignora notifiche con clientState errato', async () => {

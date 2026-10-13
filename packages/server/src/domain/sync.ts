@@ -218,22 +218,29 @@ export class SyncService {
         )
       ).rows[0];
     }
+    // The row may change between the read above and the writes below (check-out, release, cancellation by the user):
+    // every write is conditional on the booking still being active, so a sync never resurrects a terminal state.
     if (ev.isCancelled) {
       if (b && ['pending', 'confirmed', 'tentative'].includes(b.status)) {
-        await this.s.db.query(`update booking set status = 'cancelled', updated_at = now(), last_synced_at = now() where id = $1`, [b.id]);
-        return 'updated';
+        const r = await this.s.db.query(
+          `update booking set status = 'cancelled', updated_at = now(), last_synced_at = now()
+           where id = $1 and status in ('pending','confirmed','tentative')`,
+          [b.id],
+        );
+        return r.rowCount ? 'updated' : 'ignored';
       }
       return 'ignored';
     }
     if (b) {
       if (['released', 'cancelled', 'declined', 'completed'].includes(b.status)) return 'ignored';
-      const status: BookingStatus = b.status === 'pending' ? (b.proposal_id ? 'tentative' : 'confirmed') : b.status;
-      await this.s.db.query(
-        `update booking set start_at = $2, end_at = $3, status = $4, resource_event_id = $5, ical_uid = $6,
-           last_synced_at = now(), updated_at = now() where id = $1`,
-        [b.id, ev.start, ev.end, status, ev.id, ev.iCalUId],
+      const accepted: BookingStatus = b.proposal_id ? 'tentative' : 'confirmed';
+      const r = await this.s.db.query(
+        `update booking set start_at = $2, end_at = $3, status = case when status = 'pending' then $4 else status end,
+           resource_event_id = $5, ical_uid = $6, last_synced_at = now(), updated_at = now()
+         where id = $1 and status in ('pending','confirmed','tentative')`,
+        [b.id, ev.start, ev.end, accepted, ev.id, ev.iCalUId],
       );
-      return 'updated';
+      return r.rowCount ? 'updated' : 'ignored';
     }
     // Booked directly in Outlook (or on another channel): Ritrovo adopts it with the same rules.
     const organizerEmail = ev.organizerEmail || mailbox;
@@ -283,8 +290,11 @@ export class SyncService {
       if (present.has(r.ical_uid!)) continue;
       // Exchange may still be processing a fresh request.
       if (r.status === 'pending' && r.created_at > grace) continue;
-      await this.s.db.query(`update booking set status = 'cancelled', updated_at = now() where id = $1`, [r.id]);
-      n++;
+      const res = await this.s.db.query(
+        `update booking set status = 'cancelled', updated_at = now() where id = $1 and status in ('confirmed','tentative','pending')`,
+        [r.id],
+      );
+      n += res.rowCount ? 1 : 0;
     }
     return n;
   }
