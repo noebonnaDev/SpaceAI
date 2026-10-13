@@ -17,7 +17,7 @@
   "scripts": {
     "build": "npm run build -w @ritrovo/web && npm run build -w @ritrovo/server",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test -w @ritrovo/server && npm run test -w @ritrovo/web",
+    "test": "npm run test -w @ritrovo/server && npm run test -w @ritrovo/web && npm run test -w @ritrovo/addin",
     "test:acceptance": "npm run test:acceptance -w @ritrovo/server",
     "dev": "npm run dev -w @ritrovo/server",
     "start": "npm run start -w @ritrovo/server",

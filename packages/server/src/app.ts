@@ -44,6 +44,8 @@ const ADDIN_PREFIX = '/addin/';
 export async function buildApp(opts: BuildOptions): Promise<{ app: FastifyInstance; ctx: AppContext }> {
   const app = Fastify({
     logger: opts.logger ?? false,
+    // Request logs contain IP addresses (personal data): only with LOG_LEVEL=debug.
+    disableRequestLogging: opts.config.logLevel !== 'debug',
     bodyLimit: 4 * 1024 * 1024,
     trustProxy: true,
   });
@@ -95,7 +97,8 @@ export async function buildApp(opts: BuildOptions): Promise<{ app: FastifyInstan
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('Referrer-Policy', 'same-origin');
     const url = req.url;
-    if (url.startsWith('/api/')) {
+    if (url.startsWith('/api/') || url.startsWith('/redirect.html')) {
+      // The MSAL redirect bridge receives authorization codes in its URL: never cache it.
       reply.header('Cache-Control', 'no-store');
     } else if (!url.startsWith(ADDIN_PREFIX)) {
       // The Outlook add-in pages are loaded by Outlook inside an iframe and use Office.js from Microsoft's CDN:

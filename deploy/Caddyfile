@@ -1,0 +1,12 @@
+# Ritrovo behind Caddy. RITROVO_DOMAIN comes from .env (e.g. prenotazioni.azienda.it).
+# Default: automatic HTTPS with Let's Encrypt (the domain must resolve publicly and ports 80/443 must be reachable).
+# Internal-only server with a company certificate: comment "tls" below back in and put the files in ./secrets.
+{$RITROVO_DOMAIN} {
+	encode gzip
+	# tls /certs/ritrovo.crt /certs/ritrovo.key
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	reverse_proxy app:8080
+}

@@ -12,3 +12,4 @@ backups/
 packages/addin/build/
 .DS_Store
 *.log
+e2e/screenshots/

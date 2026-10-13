@@ -1,0 +1,55 @@
+# Ritrovo - avvio con un comando:   docker compose up
+# Senza file .env parte in MODALITÀ DEMO: accesso con utenti di esempio, Exchange simulato (GRAPH_MODE=mock),
+# dati di esempio. Per la produzione compila .env (vedi .env.example e docs/03-installazione.md) e usa anche
+# docker-compose.prod.yml (HTTPS con Caddy).
+name: ritrovo
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ritrovo
+      POSTGRES_USER: ritrovo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ritrovo-demo}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ritrovo -d ritrovo"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+    image: ritrovo:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://ritrovo:${POSTGRES_PASSWORD:-ritrovo-demo}@db:5432/ritrovo
+      # "development" consente l'accesso demo; in produzione .env imposta NODE_ENV=production e AUTH_MODE=entra.
+      NODE_ENV: ${NODE_ENV:-development}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
+      AUTH_MODE: ${AUTH_MODE:-dev}
+      GRAPH_MODE: ${GRAPH_MODE:-mock}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      ENTRA_TENANT_ID: ${ENTRA_TENANT_ID:-}
+      ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:-}
+      ENTRA_CLIENT_SECRET: ${ENTRA_CLIENT_SECRET:-}
+      ENTRA_CLIENT_CERT_PATH: ${ENTRA_CLIENT_CERT_PATH:-}
+      ENTRA_CLIENT_KEY_PATH: ${ENTRA_CLIENT_KEY_PATH:-}
+      INITIAL_ADMIN_EMAILS: ${INITIAL_ADMIN_EMAILS:-}
+      GRAPH_WEBHOOKS_ENABLED: ${GRAPH_WEBHOOKS_ENABLED:-false}
+      GRAPH_DELTA_INTERVAL_SECONDS: ${GRAPH_DELTA_INTERVAL_SECONDS:-120}
+      DEV_JWT_SECRET: ${DEV_JWT_SECRET:-}
+      ADDIN_ID: ${ADDIN_ID:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - ./secrets:/run/secrets/ritrovo:ro
+    ports:
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-8080}:8080"
+
+volumes:
+  db-data:

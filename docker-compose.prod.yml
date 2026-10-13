@@ -1,0 +1,25 @@
+# Produzione: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Aggiunge Caddy come reverse proxy HTTPS (certificati automatici Let's Encrypt se il dominio è pubblico,
+# oppure certificato aziendale: vedi Caddyfile). L'app non è esposta direttamente.
+services:
+  app:
+    ports: !reset []
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      RITROVO_DOMAIN: ${RITROVO_DOMAIN:?Imposta RITROVO_DOMAIN nel file .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./secrets:/certs:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  caddy-data:
+  caddy-config:
