@@ -1,0 +1,69 @@
+/* In-browser demo: start-up screen and the floating control bar. Built on the app's own tokens (styles.css). */
+.demo-boot {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  background: var(--page);
+}
+.demo-boot-card {
+  width: min(520px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.demo-boot-card h1 { margin: 0; font-size: 1.4rem; color: var(--brand-strong); }
+.demo-steps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.demo-steps li { display: flex; gap: 10px; align-items: baseline; color: var(--muted); }
+.demo-steps li::before { content: '○'; width: 1.2em; flex: none; text-align: center; }
+.demo-steps li.done { color: var(--text-2); }
+.demo-steps li.done::before { content: '✓'; color: var(--good-text); }
+.demo-steps li.now { color: var(--text); font-weight: 600; }
+.demo-steps li.now::before { content: '●'; color: var(--brand); animation: demo-pulse 1.2s ease-in-out infinite; }
+.demo-boot-error { color: var(--critical-text); font-weight: 600; margin: 0; }
+@keyframes demo-pulse { 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .demo-steps li.now::before { animation: none; } }
+
+.demo-bar {
+  position: fixed;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 1000;
+  width: min(380px, calc(100vw - 24px));
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+  font-size: 0.9rem;
+}
+.demo-bar.closed { width: auto; }
+.demo-bar-toggle {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 14px;
+  border: 0;
+  background: var(--brand);
+  color: var(--on-brand);
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+  cursor: pointer;
+}
+.demo-bar.closed .demo-bar-toggle { border-radius: calc(var(--radius) - 1px); }
+.demo-bar-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.demo-bar-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.demo-bar-note { margin: 0; color: var(--text-2); font-size: 0.82rem; line-height: 1.45; }
+.demo-bar-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.demo-bar-label { width: 100%; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.demo-bar-hint { margin: 0; color: var(--warning-text); font-size: 0.82rem; }
+
+/* Published as an artifact: keep the phone's safe areas clear (the app's base styles zero the root padding). */
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }

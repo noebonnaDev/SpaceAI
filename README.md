@@ -21,6 +21,10 @@ Apri **http://localhost:8080** e scegli un utente di esempio: *Giulia Rinaldi* (
 
 Per fermare la demo e cancellarne i dati: `docker compose down -v`.
 
+### Demo senza server, nel browser
+
+`npm run build:demo` produce in `packages/demo/dist` un sito statico che esegue l'intera Ritrovo nel browser: il codice del server, PostgreSQL in WebAssembly (PGlite) ed Exchange simulato, con gli stessi dati di esempio. Si pubblica su qualsiasi hosting statico (i file `.wasm` vanno serviti come `application/wasm`) e serve a far provare l'app a colleghi o clienti senza installare nulla. I dati vivono solo nella scheda del browser: ricaricando la pagina si riparte da zero. Una barra "Demo" permette di passare al pannello di una sala, allo schermo dell'ingresso e di simulare la scansione di un QR code.
+
 ## Documentazione
 
 | Documento | Contenuto |
@@ -69,6 +73,7 @@ packages/shared   tipi condivisi tra server e interfaccia
 packages/server   API (Fastify), PostgreSQL, gateway Microsoft Graph (reale e mock), job, test
 packages/web      PWA, pannello di amministrazione, pannello fuori-porta, totem, pagine dell'add-in
 packages/addin    manifest XML dell'add-in Outlook, generatore e validatore
+packages/demo     demo statica: app e server nel browser (PGlite, Exchange simulato)
 deploy/           Caddyfile (HTTPS)
 scripts/          backup e ripristino del database
 e2e/              smoke test dell'interfaccia con Playwright

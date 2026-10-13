@@ -9,7 +9,8 @@
     "packages/shared",
     "packages/server",
     "packages/web",
-    "packages/addin"
+    "packages/addin",
+    "packages/demo"
   ],
   "engines": {
     "node": ">=22.12"
@@ -17,11 +18,12 @@
   "scripts": {
     "build": "npm run build -w @ritrovo/web && npm run build -w @ritrovo/server",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test -w @ritrovo/server && npm run test -w @ritrovo/web && npm run test -w @ritrovo/addin",
+    "test": "npm run test -w @ritrovo/server && npm run test -w @ritrovo/web && npm run test -w @ritrovo/addin && npm run test -w @ritrovo/demo",
     "test:acceptance": "npm run test:acceptance -w @ritrovo/server",
     "dev": "npm run dev -w @ritrovo/server",
     "start": "npm run start -w @ritrovo/server",
     "manifest": "npm run manifest -w @ritrovo/addin --",
-    "manifest:validate": "npm run validate -w @ritrovo/addin --"
+    "manifest:validate": "npm run validate -w @ritrovo/addin --",
+    "build:demo": "npm run build -w @ritrovo/demo"
   }
 }

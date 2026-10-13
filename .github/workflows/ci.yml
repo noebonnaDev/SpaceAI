@@ -31,6 +31,8 @@ jobs:
         env:
           TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/ritrovo_test
       - run: npm run build
+      - name: Demo nel browser (build statica)
+        run: npm run build:demo
       - name: Manifest dell'add-in (controlli locali + validazione Microsoft)
         run: |
           npm run manifest -- --url https://prenotazioni.esempio.it

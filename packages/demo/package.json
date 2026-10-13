@@ -1,0 +1,12 @@
+{
+  "name": "@ritrovo/demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Ritrovo interamente nel browser (database PGlite ed Exchange simulato), per demo senza server",
+  "scripts": {
+    "build": "vite build && node scripts/artifact.mjs",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}
