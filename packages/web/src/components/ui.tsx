@@ -76,6 +76,68 @@ export function Dialog({
   );
 }
 
+/**
+ * In-page confirmation. Native confirm()/prompt() look foreign to the app and are blocked in embedded views
+ * (Outlook task pane, sandboxed frames), so the app always asks through its own dialog.
+ */
+export function useConfirm(): [(message: string, confirmLabel?: string) => Promise<boolean>, ReactNode] {
+  const [state, setState] = useState<{ message: string; confirmLabel: string; resolve: (ok: boolean) => void } | null>(null);
+  const ask = useCallback(
+    (message: string, confirmLabel?: string) =>
+      new Promise<boolean>((resolve) => setState({ message, confirmLabel: confirmLabel ?? t('common.confirm'), resolve })),
+    [],
+  );
+  const done = (ok: boolean) => {
+    state?.resolve(ok);
+    setState(null);
+  };
+  const element = (
+    <Dialog
+      open={state !== null}
+      title={t('common.confirm')}
+      onClose={() => done(false)}
+      footer={
+        <>
+          <button type="button" className="btn" onClick={() => done(false)}>
+            {t('common.cancel')}
+          </button>
+          <button type="button" className="btn danger" onClick={() => done(true)}>
+            {state?.confirmLabel}
+          </button>
+        </>
+      }
+    >
+      <p>{state?.message}</p>
+    </Dialog>
+  );
+  return [ask, element];
+}
+
+/**
+ * Image served by the API (floor plans). Loaded with fetch and shown from a blob URL, so it works the same
+ * against the real server and in the in-browser demo, where /api is answered inside the page.
+ */
+export function ApiImage({ src, alt }: { src: string; alt: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    fetch(src)
+      .then((r) => (r.ok ? r.blob() : null))
+      .then((blob) => {
+        if (!blob || cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [src]);
+  return url ? <img src={url} alt={alt} /> : <div className="image-loading" role="img" aria-label={alt} />;
+}
+
 // ---------------------------------------------------------------- small pieces
 
 export function Spinner({ label }: { label?: string }) {

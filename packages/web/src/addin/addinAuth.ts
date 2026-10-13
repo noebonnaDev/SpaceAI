@@ -1,5 +1,5 @@
 import type { IPublicClientApplication } from '@azure/msal-browser';
-import { loadPublicConfig } from '../auth';
+import { devTokenStore, loadPublicConfig } from '../auth';
 
 /**
  * Single sign-on inside Outlook with nested app authentication (NAA): Outlook brokers the token for
@@ -7,7 +7,6 @@ import { loadPublicConfig } from '../auth';
  * Legacy Exchange identity/callback tokens are never used.
  */
 let pca: IPublicClientApplication | null = null;
-const DEV_TOKEN_KEY = 'ritrovo.devToken';
 
 async function nestable(): Promise<IPublicClientApplication> {
   if (pca) return pca;
@@ -34,7 +33,7 @@ export function naaSupported(): boolean {
 
 export async function addinToken(): Promise<string | null> {
   const cfg = await loadPublicConfig();
-  if (cfg.authMode === 'dev') return sessionStorage.getItem(DEV_TOKEN_KEY);
+  if (cfg.authMode === 'dev') return devTokenStore.get();
   const app = await nestable();
   const request = { scopes: [cfg.apiScope!] };
   try {

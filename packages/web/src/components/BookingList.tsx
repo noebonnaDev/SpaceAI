@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { Api } from '../api';
 import { fmtDate, fmtTime } from '../format';
 import { t } from '../i18n';
-import { StatusBadge, useToast } from './ui';
+import { StatusBadge, useConfirm, useToast } from './ui';
 
 /** Agenda of bookings with check-in, check-out and cancel actions. */
 export function BookingList({
@@ -21,9 +21,10 @@ export function BookingList({
 }) {
   const toast = useToast();
   const [busy, setBusy] = useState<string | null>(null);
+  const [confirm, confirmDialog] = useConfirm();
 
   const act = async (b: BookingDto, action: 'check-in' | 'check-out' | 'cancel', ok: string) => {
-    if (action === 'cancel' && !window.confirm(t('booking.confirmCancel'))) return;
+    if (action === 'cancel' && !(await confirm(t('booking.confirmCancel'), t('booking.cancel')))) return;
     setBusy(b.id);
     try {
       await api.post(`/api/bookings/${b.id}/${action}`);
@@ -37,7 +38,7 @@ export function BookingList({
   };
 
   const cancelSeries = async (b: BookingDto) => {
-    if (!b.seriesId || !window.confirm(t('booking.confirmCancel'))) return;
+    if (!b.seriesId || !(await confirm(t('booking.confirmCancel'), t('booking.cancelSeries')))) return;
     setBusy(b.id);
     try {
       await api.post(`/api/series/${b.seriesId}/cancel`);
@@ -102,6 +103,7 @@ export function BookingList({
           </div>
         </div>
       ))}
+      {confirmDialog}
     </div>
   );
 }

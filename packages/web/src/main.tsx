@@ -4,7 +4,13 @@ import { App } from './App';
 import { setLanguage } from './i18n';
 import './styles.css';
 
-setLanguage(localStorage.getItem('ritrovo.lang') ?? 'it');
+let lang = 'it';
+try {
+  lang = localStorage.getItem('ritrovo.lang') ?? 'it';
+} catch {
+  /* storage blocked: default language */
+}
+setLanguage(lang);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

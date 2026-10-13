@@ -9,6 +9,40 @@ import type { PublicConfig, UserDto } from '@ritrovo/shared';
  */
 const DEV_TOKEN_KEY = 'ritrovo.devToken';
 
+/** Demo session token: sessionStorage when available (it can throw in sandboxed or private views), memory otherwise. */
+const memoryStore = new Map<string, string>();
+export const devTokenStore = {
+  get(): string | null {
+    try {
+      return sessionStorage.getItem(DEV_TOKEN_KEY);
+    } catch {
+      return memoryStore.get(DEV_TOKEN_KEY) ?? null;
+    }
+  },
+  set(token: string): void {
+    memoryStore.set(DEV_TOKEN_KEY, token);
+    try {
+      sessionStorage.setItem(DEV_TOKEN_KEY, token);
+    } catch {
+      /* memory only */
+    }
+  },
+  clear(): void {
+    memoryStore.delete(DEV_TOKEN_KEY);
+    try {
+      sessionStorage.removeItem(DEV_TOKEN_KEY);
+    } catch {
+      /* memory only */
+    }
+  },
+};
+
+/** What happens after a demo sign-out: by default back to the start page. The in-browser demo replaces it. */
+let afterDevSignOut = () => window.location.assign('/');
+export function setAfterDevSignOut(handler: () => void): void {
+  afterDevSignOut = handler;
+}
+
 let config: PublicConfig | null = null;
 let msal: IPublicClientApplication | null = null;
 
@@ -44,7 +78,7 @@ async function msalInstance(): Promise<IPublicClientApplication> {
 /** Call once at start-up: completes a pending redirect sign-in. Returns true when a user is signed in. */
 export async function initAuth(): Promise<boolean> {
   const cfg = await loadPublicConfig();
-  if (cfg.authMode === 'dev') return Boolean(sessionStorage.getItem(DEV_TOKEN_KEY));
+  if (cfg.authMode === 'dev') return Boolean(devTokenStore.get());
   const pca = await msalInstance();
   const result = await pca.handleRedirectPromise();
   if (result?.account) pca.setActiveAccount(result.account);
@@ -66,13 +100,13 @@ export async function devSignIn(email: string): Promise<UserDto> {
   });
   if (!res.ok) throw new Error('Accesso demo non riuscito');
   const body = (await res.json()) as { token: string; user: UserDto };
-  sessionStorage.setItem(DEV_TOKEN_KEY, body.token);
+  devTokenStore.set(body.token);
   return body.user;
 }
 
 export async function getAccessToken(): Promise<string | null> {
   const cfg = await loadPublicConfig();
-  if (cfg.authMode === 'dev') return sessionStorage.getItem(DEV_TOKEN_KEY);
+  if (cfg.authMode === 'dev') return devTokenStore.get();
   const pca = await msalInstance();
   const account = pca.getActiveAccount() ?? pca.getAllAccounts()[0];
   if (!account) return null;
@@ -91,8 +125,8 @@ export async function getAccessToken(): Promise<string | null> {
 export async function signOut(): Promise<void> {
   const cfg = await loadPublicConfig();
   if (cfg.authMode === 'dev') {
-    sessionStorage.removeItem(DEV_TOKEN_KEY);
-    window.location.assign('/');
+    devTokenStore.clear();
+    afterDevSignOut();
     return;
   }
   const pca = await msalInstance();

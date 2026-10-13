@@ -1,7 +1,7 @@
 import type { BuildingDto, DeskMapEntry, ResourceDto } from '@ritrovo/shared';
 import { useEffect, useState } from 'react';
 import { BookingDialog } from '../components/BookingDialog';
-import { ErrorBox, Features, Field, Spinner, useAsync, useToast } from '../components/ui';
+import { ApiImage, ErrorBox, Features, Field, Spinner, useAsync, useToast } from '../components/ui';
 import { fmtTime, localToIso, nextQuarter, todayLocal } from '../format';
 import { t } from '../i18n';
 import { useSession } from '../session';
@@ -141,7 +141,7 @@ export function DesksPage() {
           <h2 className="sr-only">{t('desks.map')}</h2>
           {floor?.hasMap ? (
             <div className="floormap" style={{ opacity: desks.loading ? 0.6 : 1 }}>
-              <img src={`/api/floors/${floor.id}/map?v=${floor.mapVersion ?? ''}`} alt={`${t('desks.map')} ${floor.name}`} />
+              <ApiImage src={`/api/floors/${floor.id}/map?v=${floor.mapVersion ?? ''}`} alt={`${t('desks.map')} ${floor.name}`} />
               {entries
                 .filter((e) => e.resource.kind === 'desk' && e.resource.mapX !== null && e.resource.mapY !== null)
                 .map((e) => (

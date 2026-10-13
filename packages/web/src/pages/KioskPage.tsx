@@ -6,9 +6,16 @@ import { t } from '../i18n';
 
 const KEY = 'ritrovo.kioskToken';
 
+/** The in-browser demo pairs its simulated tablets directly, without a pairing link. */
+let tokenOverride: string | null = null;
+export function setKioskTokenOverride(token: string | null): void {
+  tokenOverride = token;
+}
+
 /** Reads the pairing token from the URL fragment (#t=...) once and keeps it on the device. */
 export function useKioskToken(): string | null {
   const [token] = useState(() => {
+    if (tokenOverride) return tokenOverride;
     const m = window.location.hash.match(/t=([A-Za-z0-9_-]+)/);
     if (m) {
       try {
@@ -65,6 +72,11 @@ export function useWakeLock() {
   useEffect(() => {
     let lock: { release: () => Promise<void> } | null = null;
     const nav = navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } };
+    // Embedded frames may deny the feature: ask only when allowed (browsers log a policy violation otherwise).
+    type Policy = { allowsFeature(f: string): boolean };
+    const doc = document as Document & { permissionsPolicy?: Policy; featurePolicy?: Policy };
+    const policy = doc.permissionsPolicy ?? doc.featurePolicy;
+    if (policy && !policy.allowsFeature('screen-wake-lock')) return;
     nav.wakeLock?.request('screen').then((l) => (lock = l)).catch(() => undefined);
     return () => void lock?.release().catch(() => undefined);
   }, []);

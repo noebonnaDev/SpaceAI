@@ -1,6 +1,6 @@
 import type { PublicConfig, UserDto } from '@ritrovo/shared';
-import { useEffect, useState } from 'react';
-import { BrowserRouter, Navigate, NavLink, Route, Routes } from 'react-router';
+import { useEffect, useState, type MutableRefObject } from 'react';
+import { BrowserRouter, MemoryRouter, Navigate, NavLink, Route, Routes, useNavigate } from 'react-router';
 import { ApiError } from './api';
 import { devSignIn, initAuth, loadPublicConfig, signInWithMicrosoft, signOut } from './auth';
 import { Logo } from './components/Logo';
@@ -27,19 +27,38 @@ type Boot =
   | { phase: 'login'; config: PublicConfig }
   | { phase: 'ready'; config: PublicConfig; user: UserDto };
 
-export function App() {
+/** Options used only by the in-browser demo, which runs inside a page it cannot navigate. */
+export interface EmbeddedOptions {
+  /** Keep routes in memory instead of the address bar. */
+  memoryRouter?: boolean;
+  /** Receives a function that navigates to an in-app path. */
+  navigatorRef?: MutableRefObject<((to: string) => void) | null>;
+}
+
+export function App(props: EmbeddedOptions = {}) {
   const path = window.location.pathname;
   // Room panels and totems use a device token, not a user session.
-  if (path.startsWith('/pannello')) return <KioskPage />;
-  if (path.startsWith('/totem')) return <TotemPage />;
+  if (!props.memoryRouter && path.startsWith('/pannello')) return <KioskPage />;
+  if (!props.memoryRouter && path.startsWith('/totem')) return <TotemPage />;
   return (
     <ToastProvider>
-      <UserApp />
+      <UserApp {...props} />
     </ToastProvider>
   );
 }
 
-function UserApp() {
+function NavigatorBridge({ target }: { target: MutableRefObject<((to: string) => void) | null> }) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    target.current = (to) => void navigate(to);
+    return () => {
+      target.current = null;
+    };
+  }, [navigate, target]);
+  return null;
+}
+
+function UserApp({ memoryRouter, navigatorRef }: EmbeddedOptions) {
   const [boot, setBoot] = useState<Boot>({ phase: 'loading' });
 
   const start = async () => {
@@ -88,9 +107,16 @@ function UserApp() {
         refreshUser: (user) => setBoot({ ...boot, user }),
       }}
     >
-      <BrowserRouter>
-        <Shell />
-      </BrowserRouter>
+      {memoryRouter ? (
+        <MemoryRouter>
+          <Shell />
+          {navigatorRef && <NavigatorBridge target={navigatorRef} />}
+        </MemoryRouter>
+      ) : (
+        <BrowserRouter>
+          <Shell />
+        </BrowserRouter>
+      )}
     </SessionProvider>
   );
 }

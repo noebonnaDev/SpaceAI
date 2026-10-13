@@ -1,6 +1,6 @@
 import type { FacilityRequestDto, RequestCategory, RequestStatus, ResourceDto } from '@ritrovo/shared';
 import { useState, type FormEvent } from 'react';
-import { ErrorBox, Field, Spinner, useAsync, useToast } from '../components/ui';
+import { Dialog, ErrorBox, Field, Spinner, useAsync, useToast } from '../components/ui';
 import { fmtDateTime } from '../format';
 import { t } from '../i18n';
 import { useSession } from '../session';
@@ -41,15 +41,20 @@ export function RequestsPage() {
     }
   };
 
-  const update = async (r: FacilityRequestDto, status: RequestStatus) => {
-    const note = status === 'resolved' || status === 'closed' ? window.prompt(t('requests.resolution'), r.resolutionNote ?? '') : undefined;
+  // Resolving or closing a request asks for a closing note in the app's own dialog.
+  const [closing, setClosing] = useState<{ r: FacilityRequestDto; status: RequestStatus; note: string } | null>(null);
+  const save = async (r: FacilityRequestDto, status: RequestStatus, note?: string) => {
     try {
-      await api.patch(`/api/requests/${r.id}`, { status, ...(note !== undefined && note !== null ? { resolutionNote: note } : {}) });
+      await api.patch(`/api/requests/${r.id}`, { status, ...(note !== undefined ? { resolutionNote: note } : {}) });
       mine.reload();
       all.reload();
     } catch (err) {
       toast((err as Error).message, 'error');
     }
+  };
+  const update = (r: FacilityRequestDto, status: RequestStatus) => {
+    if (status === 'resolved' || status === 'closed') setClosing({ r, status, note: r.resolutionNote ?? '' });
+    else void save(r, status);
   };
 
   const RequestRow = ({ r, manage }: { r: FacilityRequestDto; manage: boolean }) => (
@@ -78,7 +83,7 @@ export function RequestsPage() {
       </div>
       <div className="booking-actions">
         {manage ? (
-          <select value={r.status} onChange={(e) => void update(r, e.target.value as RequestStatus)} aria-label={t('requests.title')} style={{ width: 'auto' }}>
+          <select value={r.status} onChange={(e) => update(r, e.target.value as RequestStatus)} aria-label={t('requests.title')} style={{ width: 'auto' }}>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
                 {t(`requests.status.${s}`)}
@@ -87,7 +92,7 @@ export function RequestsPage() {
           </select>
         ) : (
           r.status !== 'closed' && (
-            <button className="btn small" onClick={() => void update(r, 'closed')}>
+            <button className="btn small" onClick={() => update(r, 'closed')}>
               {t('requests.close')}
             </button>
           )
@@ -163,6 +168,32 @@ export function RequestsPage() {
           {all.data?.map((r) => <RequestRow key={r.id} r={r} manage />)}
         </section>
       )}
+      <Dialog
+        open={closing !== null}
+        title={closing ? `${closing.r.title}: ${t(`requests.status.${closing.status}`)}` : ''}
+        onClose={() => setClosing(null)}
+        footer={
+          <>
+            <button type="button" className="btn" onClick={() => setClosing(null)}>
+              {t('common.cancel')}
+            </button>
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => {
+                if (closing) void save(closing.r, closing.status, closing.note.trim());
+                setClosing(null);
+              }}
+            >
+              {t('common.save')}
+            </button>
+          </>
+        }
+      >
+        <Field label={t('requests.resolution')}>
+          <textarea id="request-resolution-note" rows={4} value={closing?.note ?? ''} onChange={(e) => closing && setClosing({ ...closing, note: e.target.value })} />
+        </Field>
+      </Dialog>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import type { BuildingDto, ResourceDto } from '@ritrovo/shared';
 import { useState, type FormEvent, type MouseEvent } from 'react';
-import { ErrorBox, Field, Spinner, useAsync, useToast } from '../../components/ui';
+import { ApiImage, ErrorBox, Field, Spinner, useAsync, useToast } from '../../components/ui';
 import { t } from '../../i18n';
 import { useSession } from '../../session';
 
@@ -128,7 +128,7 @@ export function BuildingsTab() {
             <p className="small muted">{placing ? t('admin.buildings.placing', { name: placing.name }) : t('admin.buildings.placeHint')}</p>
             <div className="two-col">
               <div className={`floormap ${placing ? 'placing' : ''}`} onClick={(e) => void place(e)}>
-                {floor.hasMap ? <img src={`/api/floors/${floor.id}/map?v=${floor.mapVersion ?? ''}`} alt={floor.name} /> : <div className="empty">{t('desks.noMap')}</div>}
+                {floor.hasMap ? <ApiImage src={`/api/floors/${floor.id}/map?v=${floor.mapVersion ?? ''}`} alt={floor.name} /> : <div className="empty">{t('desks.noMap')}</div>}
                 {onFloor
                   .filter((r) => r.mapX !== null && r.mapY !== null)
                   .map((r) => (

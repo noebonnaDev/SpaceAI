@@ -1,7 +1,7 @@
 import type { BookingDto, ConflictPayload, PublicConfig, ResourceDto, ResourceKind, UserDto } from '@ritrovo/shared';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiError, createApi } from '../api';
-import { devSignIn, loadPublicConfig } from '../auth';
+import { devSignIn, devTokenStore, loadPublicConfig } from '../auth';
 import { ConflictPanel } from '../components/BookingDialog';
 import { BookingList } from '../components/BookingList';
 import { Logo } from '../components/Logo';
@@ -33,7 +33,7 @@ function TaskPane({ office }: { office: typeof Office | undefined }) {
     try {
       const cfg = await loadPublicConfig();
       setConfig(cfg);
-      if (cfg.authMode === 'dev' && !sessionStorage.getItem('ritrovo.devToken')) return;
+      if (cfg.authMode === 'dev' && !devTokenStore.get()) return;
       setUser(await api.get<UserDto>('/api/me'));
     } catch (err) {
       setError(err instanceof ApiError ? err : new Error(t('addin.signInFailed')));

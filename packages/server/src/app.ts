@@ -2,31 +2,19 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
-import { ZodError } from 'zod';
-import { Authenticator } from './auth/auth.js';
+import type { JWTVerifyGetKey } from 'jose';
+import { createContext, errorResponse, INTERNAL_ERROR, type AppContext } from './app-context.js';
 import type { AppConfig } from './config.js';
 import type { Db } from './db/db.js';
-import { BookingService, type Logger } from './domain/bookings.js';
+import type { Logger } from './domain/bookings.js';
 import type { Clock } from './domain/clock.js';
-import { AppError } from './domain/errors.js';
-import { SyncService } from './domain/sync.js';
 import type { GraphGateway } from './graph/types.js';
 import { registerAdminRoutes } from './routes/admin.js';
 import { registerKioskRoutes } from './routes/kiosk.js';
 import { registerPublicRoutes } from './routes/public.js';
 import { registerUserRoutes } from './routes/user.js';
-import type { JWTVerifyGetKey } from 'jose';
 
-export interface AppContext {
-  config: AppConfig;
-  db: Db;
-  graph: GraphGateway;
-  clock: Clock;
-  auth: Authenticator;
-  bookings: BookingService;
-  sync: SyncService;
-  log: Logger;
-}
+export type { AppContext } from './app-context.js';
 
 export interface BuildOptions {
   config: AppConfig;
@@ -54,43 +42,13 @@ export async function buildApp(opts: BuildOptions): Promise<{ app: FastifyInstan
     warn: (o, m) => app.log.warn(o, m),
     error: (o, m) => app.log.error(o, m),
   };
-  const services = {
-    db: opts.db,
-    graph: opts.graph,
-    clock: opts.clock,
-    config: opts.config,
-    log,
-    acceptancePolls: opts.acceptancePolls ?? (opts.graph.mode === 'live' ? 3 : 0),
-    acceptancePollMs: opts.acceptancePollMs ?? 1500,
-  };
-  const ctx: AppContext = {
-    config: opts.config,
-    db: opts.db,
-    graph: opts.graph,
-    clock: opts.clock,
-    auth: new Authenticator(opts.db, opts.config, opts.jwks),
-    bookings: new BookingService(services),
-    sync: new SyncService(services),
-    log,
-  };
+  const ctx: AppContext = createContext({ ...opts, log });
 
   app.setErrorHandler((err, req, reply) => {
-    if (err instanceof AppError) {
-      return reply.code(err.statusCode).send({ code: err.code, message: err.message, details: err.details ?? null });
-    }
-    if (err instanceof ZodError) {
-      return reply.code(400).send({
-        code: 'VALIDATION',
-        message: 'Dati non validi: ' + err.issues.map((i) => `${i.path.join('.') || 'richiesta'}: ${i.message}`).join('; '),
-        details: err.issues,
-      });
-    }
-    const status = (err as { statusCode?: number }).statusCode;
-    if (status && status < 500) {
-      return reply.code(status).send({ code: 'BAD_REQUEST', message: (err as Error).message });
-    }
+    const known = errorResponse(err);
+    if (known) return reply.code(known.status).send(known.body);
     req.log.error({ err }, 'Errore non gestito');
-    return reply.code(500).send({ code: 'INTERNAL', message: 'Errore interno. Riprova tra poco.' });
+    return reply.code(500).send(INTERNAL_ERROR);
   });
 
   app.addHook('onSend', async (req, reply, payload) => {
