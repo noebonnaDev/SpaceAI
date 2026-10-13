@@ -1,0 +1,27 @@
+{
+  "name": "ritrovo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Ritrovo - prenotazione di sale riunioni, postazioni e risorse condivise integrata con Outlook e Microsoft 365",
+  "license": "UNLICENSED",
+  "type": "module",
+  "workspaces": [
+    "packages/shared",
+    "packages/server",
+    "packages/web",
+    "packages/addin"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "npm run build -w @ritrovo/web && npm run build -w @ritrovo/server",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test -w @ritrovo/server && npm run test -w @ritrovo/web",
+    "test:acceptance": "npm run test:acceptance -w @ritrovo/server",
+    "dev": "npm run dev -w @ritrovo/server",
+    "start": "npm run start -w @ritrovo/server",
+    "manifest": "npm run manifest -w @ritrovo/addin --",
+    "manifest:validate": "npm run validate -w @ritrovo/addin --"
+  }
+}
