@@ -40,7 +40,7 @@ export function ReceptionPage() {
                   <th>{t('booking.for')}</th>
                   <th>{t('booking.organizer')}</th>
                   <th>{t('booking.source')}</th>
-                  <th>{t('common.details')}</th>
+                  <th>{t('common.status')}</th>
                 </tr>
               </thead>
               <tbody>

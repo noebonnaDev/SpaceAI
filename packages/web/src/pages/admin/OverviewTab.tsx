@@ -53,7 +53,7 @@ export function OverviewTab() {
                     <th>{t('admin.kpi.resource')}</th>
                     <th>{t('admin.resources.kind')}</th>
                     <th>{t('common.floor')}</th>
-                    <th>{t('common.details')}</th>
+                    <th>{t('common.status')}</th>
                     <th>{t('kiosk.meeting')}</th>
                   </tr>
                 </thead>

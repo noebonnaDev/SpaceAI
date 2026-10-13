@@ -48,6 +48,7 @@ export const it = {
     available: 'Disponibile',
     unavailable: 'Occupata',
     details: 'Dettagli',
+    status: 'Stato',
     back: 'Indietro',
     minutes: '{n} min',
     hours: '{n} ore',
