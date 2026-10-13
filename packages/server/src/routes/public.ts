@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AppContext } from '../app.js';
 import { apiScope } from '../config.js';
+import { DEFAULT_ADDIN_ID, loadManifestTemplate, renderAddinManifest } from '../addin-manifest.js';
 import { userDto, type UserRow } from '../domain/users.js';
 import type { ChangeNotification } from '../graph/types.js';
 
@@ -35,6 +36,18 @@ export async function registerPublicRoutes(app: FastifyInstance, ctx: AppContext
       return { token, user: userDto(actor.user, actor.role) };
     });
   }
+
+  // Outlook add-in manifest for this deployment: usable as "manifest URL" in Microsoft 365 admin center > Integrated apps.
+  app.get('/addin/manifest.xml', async (_req, reply) => {
+    if (!ctx.config.publicBaseUrl.startsWith('https://')) {
+      return reply.code(409).send({ code: 'HTTPS_REQUIRED', message: "Il manifest dell'add-in richiede PUBLIC_BASE_URL in HTTPS." });
+    }
+    const template = loadManifestTemplate();
+    if (!template) return reply.code(404).send({ code: 'NOT_FOUND', message: 'Template del manifest non trovato.' });
+    const xml = renderAddinManifest(template, ctx.config.publicBaseUrl, process.env.ADDIN_ID || DEFAULT_ADDIN_ID, ctx.config.appName);
+    reply.header('Content-Disposition', 'inline; filename="manifest.xml"');
+    return reply.type('application/xml; charset=utf-8').send(xml);
+  });
 
   // Microsoft Graph change notifications. The subscription handshake sends ?validationToken=... and expects it back as text.
   const handle = async (req: any, reply: any) => {

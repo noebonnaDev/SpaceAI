@@ -117,7 +117,7 @@ export async function listResources(q: Queryable, f: ResourceFilter = {}): Promi
   return (await q.query<ResourceRow>(sql, params)).rows;
 }
 
-export const ResourceInputSchema = z.object({
+const ResourceFields = {
   kind: z.enum(['room', 'desk', 'asset']),
   name: z.string().trim().min(1).max(120),
   description: z.string().trim().max(1000).nullish(),
@@ -125,16 +125,29 @@ export const ResourceInputSchema = z.object({
   mailboxEmail: z.string().trim().email().max(254).nullish(),
   buildingId: z.string().uuid().nullish(),
   floorId: z.string().uuid().nullish(),
-  capacity: z.number().int().min(1).max(500).default(1),
-  features: z.array(z.string().trim().min(1).max(40)).max(30).default([]),
+  capacity: z.number().int().min(1).max(500),
+  features: z.array(z.string().trim().min(1).max(40)).max(30),
   mapX: z.number().min(0).max(1).nullish(),
   mapY: z.number().min(0).max(1).nullish(),
-  isActive: z.boolean().default(true),
-  checkInRequired: z.boolean().default(true),
+  isActive: z.boolean(),
+  checkInRequired: z.boolean(),
   checkInGraceMinutes: z.number().int().min(1).max(240).nullish(),
-  maxDurationMinutes: z.number().int().min(5).max(20160).default(480),
-  bookingWindowDays: z.number().int().min(0).max(1080).default(180),
+  maxDurationMinutes: z.number().int().min(5).max(20160),
+  bookingWindowDays: z.number().int().min(0).max(1080),
+};
+
+export const ResourceInputSchema = z.object({
+  ...ResourceFields,
+  capacity: ResourceFields.capacity.default(1),
+  features: ResourceFields.features.default([]),
+  isActive: ResourceFields.isActive.default(true),
+  checkInRequired: ResourceFields.checkInRequired.default(true),
+  maxDurationMinutes: ResourceFields.maxDurationMinutes.default(480),
+  bookingWindowDays: ResourceFields.bookingWindowDays.default(180),
 });
+
+/** PATCH: only the fields sent are changed (no defaults, unlike ResourceInputSchema.partial() in Zod 4). */
+export const ResourcePatchSchema = z.object(ResourceFields).partial();
 export type ResourceInput = z.infer<typeof ResourceInputSchema>;
 
 export async function createResource(q: Queryable, input: ResourceInput): Promise<ResourceRow> {
@@ -167,7 +180,7 @@ export async function createResource(q: Queryable, input: ResourceInput): Promis
   return getResource(q, row.id);
 }
 
-export async function updateResource(q: Queryable, id: string, patch: Partial<ResourceInput>): Promise<ResourceRow> {
+export async function updateResource(q: Queryable, id: string, patch: z.infer<typeof ResourcePatchSchema>): Promise<ResourceRow> {
   const map: Record<string, string> = {
     kind: 'kind',
     name: 'name',

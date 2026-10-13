@@ -16,6 +16,7 @@ import {
   regenerateQr,
   resourceDto,
   ResourceInputSchema,
+  ResourcePatchSchema,
   updateResource,
   type ResourceRow,
 } from '../domain/resources.js';
@@ -71,7 +72,7 @@ export async function registerAdminRoutes(app: FastifyInstance, ctx: AppContext)
   app.patch('/api/admin/resources/:id', async (req) => {
     const actor = await admin(req);
     const { id } = IdParam.parse(req.params);
-    const patch = ResourceInputSchema.partial().parse(req.body);
+    const patch = ResourcePatchSchema.parse(req.body);
     const r = await updateResource(ctx.db, id, patch);
     await audit(ctx.db, actorRef(actor), 'resource.update', 'resource', id, { fields: Object.keys(patch) });
     return resourceDto(r, await getSettings(ctx.db));

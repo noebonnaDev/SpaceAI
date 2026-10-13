@@ -1,0 +1,15 @@
+{
+  "name": "@ritrovo/addin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "manifest": "node scripts/generate-manifest.mjs",
+    "validate": "node scripts/validate-manifest.mjs",
+    "test": "node --test test/manifest.test.mjs"
+  },
+  "devDependencies": {
+    "office-addin-manifest": "^3.0.1",
+    "xml2js": "^0.6.2"
+  }
+}

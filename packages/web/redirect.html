@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Accesso in corso</title>
+  </head>
+  <body>
+    <p>Accesso in corso…</p>
+    <!-- MSAL v5 redirect bridge: the only script on this page. Registered in Entra ID as SPA redirect URI. -->
+    <script type="module">
+      import { broadcastResponseToMainFrame } from '@azure/msal-browser/redirect-bridge';
+      broadcastResponseToMainFrame().catch((error) => console.error('Errore di autenticazione', error));
+    </script>
+  </body>
+</html>
