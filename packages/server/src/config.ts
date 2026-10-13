@@ -136,6 +136,12 @@ export function validateConfig(cfg: AppConfig, allowInsecureDevAuth = false): vo
       throw new ConfigError(`Variabili mancanti: ${missing.join(', ')}`);
     }
   }
+  if ((cfg.env === 'production' || cfg.graphMode === 'live') && !cfg.databaseUrl) {
+    // Without DATABASE_URL the server falls back to an in-memory database: fine for tests, data loss in production.
+    throw new ConfigError(
+      'DATABASE_URL è obbligatorio in produzione e con GRAPH_MODE=live: senza, Ritrovo userebbe un database temporaneo in memoria e i dati andrebbero persi al riavvio.',
+    );
+  }
   if (cfg.webhooksEnabled && !cfg.publicBaseUrl.startsWith('https://')) {
     throw new ConfigError('GRAPH_WEBHOOKS_ENABLED=true richiede PUBLIC_BASE_URL in HTTPS raggiungibile da Internet.');
   }

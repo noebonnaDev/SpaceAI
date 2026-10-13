@@ -86,8 +86,14 @@ describe('Configurazione', () => {
 
   it('in modalità live richiede tenant, client e credenziale', () => {
     expect(() => loadConfig({ AUTH_MODE: 'entra', GRAPH_MODE: 'live', ENTRA_TENANT_ID: TENANT, ENTRA_CLIENT_ID: CLIENT })).toThrow(/ENTRA_CLIENT_SECRET/);
-    const ok = loadConfig({ AUTH_MODE: 'entra', GRAPH_MODE: 'live', ENTRA_TENANT_ID: TENANT, ENTRA_CLIENT_ID: CLIENT, ENTRA_CLIENT_SECRET: 'x', PUBLIC_BASE_URL: 'https://ritrovo.contoso.example' });
+    const live = { AUTH_MODE: 'entra', GRAPH_MODE: 'live', ENTRA_TENANT_ID: TENANT, ENTRA_CLIENT_ID: CLIENT, ENTRA_CLIENT_SECRET: 'x', PUBLIC_BASE_URL: 'https://ritrovo.contoso.example' };
+    expect(() => loadConfig(live)).toThrow(/DATABASE_URL/);
+    const ok = loadConfig({ ...live, DATABASE_URL: 'postgres://ritrovo:secret@db:5432/ritrovo' });
     expect(ok.graphMode).toBe('live');
+  });
+
+  it('in produzione rifiuta il database temporaneo in memoria', () => {
+    expect(() => loadConfig({ NODE_ENV: 'production', AUTH_MODE: 'entra', ENTRA_TENANT_ID: TENANT, ENTRA_CLIENT_ID: CLIENT })).toThrow(/DATABASE_URL/);
   });
 
   it('i webhook richiedono un URL pubblico HTTPS', () => {

@@ -71,7 +71,7 @@ export function QrPage() {
           <div className="chips">
             {[30, 60, 120, ...(r.kind === 'room' ? [] : [240])].map((m) => (
               <button key={m} className="btn primary" disabled={busy} onClick={() => void quickBook(m)}>
-                {m < 60 ? t('common.minutes', { n: m }) : t('common.hours', { n: m / 60 })}
+                {m < 60 ? t('common.minutes', { n: m }) : m === 60 ? t('common.hoursOne') : t('common.hours', { n: m / 60 })}
               </button>
             ))}
           </div>

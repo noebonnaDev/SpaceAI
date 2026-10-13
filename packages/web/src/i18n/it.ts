@@ -51,6 +51,7 @@ export const it = {
     back: 'Indietro',
     minutes: '{n} min',
     hours: '{n} ore',
+    hoursOne: '1 ora',
     edit: 'Modifica',
     create: 'Crea',
     optional: 'facoltativo',

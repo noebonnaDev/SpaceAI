@@ -2,7 +2,7 @@ import type { LiveResourceState } from '@ritrovo/shared';
 import { useCallback, useEffect, useState } from 'react';
 import { fmtTime } from '../format';
 import { t } from '../i18n';
-import { kioskApi, useClock, useKioskToken, useWakeLock } from './KioskPage';
+import { isUnpaired, kioskApi, useClock, useKioskToken, useWakeLock } from './KioskPage';
 
 interface TotemState {
   kind: 'totem';
@@ -19,14 +19,16 @@ export function TotemPage() {
   useWakeLock();
   const [state, setState] = useState<TotemState | null>(null);
   const [offline, setOffline] = useState(false);
+  const [unpaired, setUnpaired] = useState(false);
 
   const load = useCallback(async () => {
     if (!token) return;
     try {
       setState(await api.get<TotemState>('/api/kiosk/state'));
       setOffline(false);
-    } catch {
-      setOffline(true);
+    } catch (err) {
+      if (isUnpaired(err)) setUnpaired(true);
+      else setOffline(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -37,7 +39,7 @@ export function TotemPage() {
     return () => clearInterval(h);
   }, [load]);
 
-  if (!token) {
+  if (!token || unpaired) {
     return (
       <div className="totem">
         <h1>{t('kiosk.pairTitle')}</h1>

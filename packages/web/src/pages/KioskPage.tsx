@@ -1,6 +1,6 @@
 import type { BookingDto, ResourceDto } from '@ritrovo/shared';
 import { useCallback, useEffect, useState } from 'react';
-import { createApi } from '../api';
+import { ApiError, createApi } from '../api';
 import { fmtTime } from '../format';
 import { t } from '../i18n';
 
@@ -29,6 +29,17 @@ export function useKioskToken(): string | null {
 }
 
 export const kioskApi = (token: string | null) => createApi(async () => token, 'Kiosk');
+
+/** True when the server rejects the device key (revoked or unknown): the key is forgotten so the screen asks to be paired again. */
+export function isUnpaired(err: unknown): boolean {
+  if (!(err instanceof ApiError) || err.status !== 401) return false;
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    /* storage unavailable */
+  }
+  return true;
+}
 
 interface PanelState {
   kind: 'panel';
@@ -67,6 +78,7 @@ export function KioskPage() {
   useWakeLock();
   const [state, setState] = useState<PanelState | null>(null);
   const [offline, setOffline] = useState(false);
+  const [unpaired, setUnpaired] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -75,8 +87,9 @@ export function KioskPage() {
     try {
       setState(await api.get<PanelState>('/api/kiosk/state'));
       setOffline(false);
-    } catch {
-      setOffline(true);
+    } catch (err) {
+      if (isUnpaired(err)) setUnpaired(true);
+      else setOffline(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -94,14 +107,15 @@ export function KioskPage() {
       await api.post(url, body ?? {});
       await load();
     } catch (err) {
-      setMessage((err as Error).message);
+      if (isUnpaired(err)) setUnpaired(true);
+      else setMessage((err as Error).message);
     } finally {
       setBusy(false);
       setTimeout(() => setMessage(null), 6000);
     }
   };
 
-  if (!token) {
+  if (!token || unpaired) {
     return (
       <div className="kiosk unpaired">
         <h1 className="kiosk-room">{t('kiosk.pairTitle')}</h1>
