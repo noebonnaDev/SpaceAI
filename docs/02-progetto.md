@@ -186,6 +186,7 @@ Regole di riconciliazione per un evento letto dal calendario di una sala:
 
 - `iCalUId` già noto → aggiornamento di orari, titolo e stato (`confirmed`); se l'evento non c'è più (`@removed`) → `cancelled`, salvo che sia già `released` o `completed`;
 - `iCalUId` sconosciuto → nuova prenotazione con `source = outlook`, organizzatore collegato all'utente se l'email è nota. Anche queste prenotazioni seguono le regole di check-in e rilascio automatico.
+- ogni scrittura della sincronizzazione è **condizionata** allo stato ancora attivo della prenotazione (`pending`, `confirmed`, `tentative`): una sincronizzazione che corre in parallelo a un check-out, a un rilascio o a un annullamento non può riportare indietro lo stato.
 
 ## 7. Sicurezza
 
