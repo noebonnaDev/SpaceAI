@@ -118,10 +118,11 @@ p { margin: 0 0 0.75em; }
   border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 20;
 }
-.topbar-inner { max-width: 1200px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; gap: 16px; min-height: 56px; }
+.topbar-inner { max-width: 1200px; margin: 0 auto; padding: 8px 16px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; min-height: 56px; }
 .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; color: var(--text); text-decoration: none; }
 .logo-mark { width: 30px; height: 30px; }
-.nav { display: flex; gap: 4px; overflow-x: auto; flex: 1; scrollbar-width: none; }
+.nav { display: flex; gap: 4px; overflow-x: auto; order: 3; width: 100%; padding: 4px 0 8px; scrollbar-width: none; }
+.topbar-inner .logo { flex: 1; }
 .nav::-webkit-scrollbar { display: none; }
 .nav a {
   color: var(--text-2); text-decoration: none; padding: 8px 12px; border-radius: 999px; white-space: nowrap; font-size: 0.93rem;
@@ -136,8 +137,6 @@ main.content { max-width: 1200px; width: 100%; margin: 0 auto; padding: 24px 16p
 .page-head p { color: var(--text-2); margin: 0; }
 
 @media (max-width: 760px) {
-  .topbar-inner { flex-wrap: wrap; padding-top: 8px; gap: 8px; }
-  .nav { order: 3; width: 100%; flex: none; padding-bottom: 8px; }
   .user-name { display: none; }
   main.content { padding: 16px 16px 72px; }
   h1 { font-size: 1.35rem; }
@@ -145,7 +144,6 @@ main.content { max-width: 1200px; width: 100%; margin: 0 auto; padding: 24px 16p
 
 /* Cards and layout */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
-.card + .card { margin-top: 16px; }
 .card-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .grid { display: grid; gap: 16px; }
 .grid-2 { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
@@ -341,3 +339,13 @@ table.data td.num, table.data th.num { text-align: right; font-variant-numeric: 
   body { background: #fff; }
   .card { box-shadow: none; border: 0; }
 }
+
+/* Date and time controls with Italian format (dd/mm/yyyy, 24 h) regardless of the browser language */
+.date-input { position: relative; display: inline-flex; min-width: 150px; }
+.date-display {
+  font: inherit; display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 38px;
+  padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text);
+  cursor: pointer; text-align: left; font-variant-numeric: tabular-nums;
+}
+.date-native { position: absolute; left: 0; bottom: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; }
+.time-input { min-width: 96px; font-variant-numeric: tabular-nums; }

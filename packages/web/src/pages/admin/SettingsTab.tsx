@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { ErrorBox, Field, Spinner, useAsync, useToast } from '../../components/ui';
 import { t, tList } from '../../i18n';
 import { useSession } from '../../session';
+import { TimeInput } from '../../components/DateTime';
 
 interface Settings {
   checkInGraceMinutes: number;
@@ -61,10 +62,10 @@ export function SettingsTab() {
         </div>
         <div className="row">
           <Field label={t('admin.settings.workStart')}>
-            <input type="time" value={s.workingHours.start} onChange={(e) => setS({ ...s, workingHours: { ...s.workingHours, start: e.target.value } })} />
+            <TimeInput value={s.workingHours.start} onChange={(v) => setS({ ...s, workingHours: { ...s.workingHours, start: v } })} />
           </Field>
           <Field label={t('admin.settings.workEnd')}>
-            <input type="time" value={s.workingHours.end} onChange={(e) => setS({ ...s, workingHours: { ...s.workingHours, end: e.target.value } })} />
+            <TimeInput value={s.workingHours.end} onChange={(v) => setS({ ...s, workingHours: { ...s.workingHours, end: v } })} />
           </Field>
           <div className="field">
             <span>{t('admin.settings.workingDays')}</span>

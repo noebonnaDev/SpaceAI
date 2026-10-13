@@ -10,6 +10,7 @@ import { addMinutesToTime, fmtDate, fmtTime, localDateOf, localToIso, nextQuarte
 import { t } from '../i18n';
 import { addinToken } from './addinAuth';
 import { addRoomToMeeting, onAppointmentTimeChanged, readContext, type AddinContext } from './office';
+import { DateInput, TimeInput } from '../components/DateTime';
 
 const api = createApi(addinToken);
 
@@ -173,13 +174,13 @@ function QuickBook({ ctx }: { ctx: AddinContext }) {
       </div>
       <div className="row">
         <Field label={t('common.date')}>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <DateInput value={date} onChange={(v) => setDate(v)} />
         </Field>
         <Field label={t('common.from')}>
-          <input type="time" step={300} value={from} onChange={(e) => setFrom(e.target.value)} />
+          <TimeInput value={from} onChange={(v) => setFrom(v)} />
         </Field>
         <Field label={t('common.to')}>
-          <input type="time" step={300} value={to} onChange={(e) => setTo(e.target.value)} />
+          <TimeInput value={to} onChange={(v) => setTo(v)} />
         </Field>
       </div>
       {conflict && <ConflictPanel conflict={conflict} onPick={(a) => void book(a.resourceId, fmtTime(a.start), fmtTime(a.end))} />}

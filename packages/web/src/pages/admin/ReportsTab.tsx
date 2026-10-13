@@ -5,6 +5,7 @@ import { ErrorBox, Field, Spinner, useAsync, useToast } from '../../components/u
 import { addDaysLocal, fmtNumber, fmtPercent, todayLocal } from '../../format';
 import { t } from '../../i18n';
 import { useSession } from '../../session';
+import { DateInput } from '../../components/DateTime';
 
 type Preset = 'today' | 'yesterday' | 'last7' | 'last30' | 'last90' | 'custom';
 
@@ -64,10 +65,10 @@ export function ReportsTab() {
         {preset === 'custom' && (
           <>
             <Field label={t('common.from')}>
-              <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
+              <DateInput value={customFrom} onChange={(v) => setCustomFrom(v)} />
             </Field>
             <Field label={t('common.to')}>
-              <input type="date" value={customTo} min={customFrom} onChange={(e) => setCustomTo(e.target.value)} />
+              <DateInput value={customTo} min={customFrom} onChange={(v) => setCustomTo(v)} />
             </Field>
           </>
         )}
@@ -103,7 +104,7 @@ export function ReportsTab() {
               <span className="stat-label">{t('admin.kpi.bookings')}</span>
               <span className="stat-value">{fmtNumber(r.totals.bookings)}</span>
               <span className="stat-hint">
-                {r.totals.resources} {t(kind ? `kinds.${kind}` : 'admin.tabs.resources').toLowerCase()}
+                {r.totals.resources} {t(`kindsPlural.${kind || 'all'}`)}
               </span>
             </div>
             <div className="card stat">

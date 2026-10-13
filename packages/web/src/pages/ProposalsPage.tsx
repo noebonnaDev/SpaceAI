@@ -5,6 +5,7 @@ import { ErrorBox, Field, Spinner, StatusBadge, useAsync, useToast } from '../co
 import { addDaysLocal, fmtDateTime, fmtRange, localToIso, todayLocal } from '../format';
 import { t } from '../i18n';
 import { useSession } from '../session';
+import { DateInput, TimeInput } from '../components/DateTime';
 
 interface OptionDraft {
   resourceId: string;
@@ -97,13 +98,13 @@ export function ProposalsPage() {
               </select>
             </Field>
             <Field label={t('common.date')}>
-              <input type="date" required value={o.date} onChange={(e) => update(i, { date: e.target.value })} />
+              <DateInput required value={o.date} onChange={(v) => update(i, { date: v })} />
             </Field>
             <Field label={t('common.from')}>
-              <input type="time" required value={o.from} onChange={(e) => update(i, { from: e.target.value })} />
+              <TimeInput required value={o.from} onChange={(v) => update(i, { from: v })} />
             </Field>
             <Field label={t('common.to')}>
-              <input type="time" required value={o.to} onChange={(e) => update(i, { to: e.target.value })} />
+              <TimeInput required value={o.to} onChange={(v) => update(i, { to: v })} />
             </Field>
             {options.length > 2 && (
               <button type="button" className="btn ghost" onClick={() => setOptions((x) => x.filter((_, j) => j !== i))} aria-label="Rimuovi opzione">

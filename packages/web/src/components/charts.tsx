@@ -1,4 +1,20 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+/** Width of an element, kept in sync with ResizeObserver, so charts draw at real pixel size (11px labels stay 11px). */
+function useWidth<T extends HTMLElement>(fallback: number): [React.RefObject<T | null>, number] {
+  const ref = useRef<T>(null);
+  const [w, setW] = useState(fallback);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => setW(Math.max(260, Math.round(el.getBoundingClientRect().width)));
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, w];
+}
 
 /**
  * Single-series column chart (magnitude by category): one hue, thin columns with 4px rounded tops,
@@ -15,9 +31,8 @@ export function ColumnChart({
   ariaLabel: string;
   height?: number;
 }) {
-  const wrap = useRef<HTMLDivElement>(null);
+  const [wrap, width] = useWidth<HTMLDivElement>(560);
   const [hover, setHover] = useState<{ i: number; x: number; y: number } | null>(null);
-  const width = 640;
   const pad = { top: 16, right: 8, bottom: 26, left: 44 };
   const innerW = width - pad.left - pad.right;
   const innerH = height - pad.top - pad.bottom;
@@ -37,7 +52,7 @@ export function ColumnChart({
 
   return (
     <div className="chart-wrap" ref={wrap}>
-      <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={ariaLabel} style={{ width: '100%', height: 'auto' }}>
+      <svg className="chart" width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={ariaLabel}>
         {ticks.map((tk) => (
           <g key={tk}>
             <line className="grid-line" x1={pad.left} x2={width - pad.right} y1={y(tk)} y2={y(tk)} />

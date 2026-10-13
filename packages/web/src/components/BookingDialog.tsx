@@ -5,6 +5,7 @@ import { addDaysLocal, fmtDate, fmtDateTime, fmtTime, isoWeekday, localToIso } f
 import { t, tList } from '../i18n';
 import { Dialog, ErrorBox, Field, useToast } from './ui';
 import { PeoplePicker, type Person } from './PeoplePicker';
+import { DateInput, TimeInput } from './DateTime';
 
 export interface BookingDefaults {
   date: string;
@@ -206,13 +207,13 @@ export function BookingDialog({ api, open, resource, defaults, onClose, onDone, 
         </Field>
         <div className="row">
           <Field label={t('common.date')}>
-            <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
+            <DateInput required value={date} onChange={(v) => setDate(v)} />
           </Field>
           <Field label={t('common.from')}>
-            <input type="time" required step={300} value={from} onChange={(e) => setFrom(e.target.value)} />
+            <TimeInput required value={from} onChange={(v) => setFrom(v)} />
           </Field>
           <Field label={t('common.to')}>
-            <input type="time" required step={300} value={to} onChange={(e) => setTo(e.target.value)} />
+            <TimeInput required value={to} onChange={(v) => setTo(v)} />
           </Field>
         </div>
         {isRoom && (
@@ -237,7 +238,7 @@ export function BookingDialog({ api, open, resource, defaults, onClose, onDone, 
             </label>
             {multiDay && (
               <Field label={t('booking.toDate')} hint={t('booking.multiDayHint')}>
-                <input type="date" value={toDate} min={date} onChange={(e) => setToDate(e.target.value)} />
+                <DateInput value={toDate} min={date} onChange={(v) => setToDate(v)} />
               </Field>
             )}
           </>
@@ -257,7 +258,7 @@ export function BookingDialog({ api, open, resource, defaults, onClose, onDone, 
                   <input type="number" min={1} max={12} value={interval} onChange={(e) => setInterval(Number(e.target.value) || 1)} />
                 </Field>
                 <Field label={t('booking.until')}>
-                  <input type="date" value={until} min={date} onChange={(e) => setUntil(e.target.value)} />
+                  <DateInput value={until} min={date} onChange={(v) => setUntil(v)} />
                 </Field>
               </div>
             )}

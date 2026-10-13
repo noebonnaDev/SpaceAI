@@ -6,6 +6,7 @@ import { ErrorBox, Features, Field, Spinner, useAsync } from '../components/ui';
 import { addMinutesToTime, localToIso, nextQuarter, todayLocal } from '../format';
 import { t } from '../i18n';
 import { useSession } from '../session';
+import { DateInput, TimeInput } from '../components/DateTime';
 
 /** Meeting room search with advanced filters and live availability (Ritrovo + Exchange free/busy). */
 export function RoomsPage({ onBehalf = false }: { onBehalf?: boolean }) {
@@ -42,13 +43,13 @@ export function RoomsPage({ onBehalf = false }: { onBehalf?: boolean }) {
       <section className="card stack" aria-label={t('rooms.filters')}>
         <div className="row">
           <Field label={t('common.date')}>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <DateInput value={date} onChange={(v) => setDate(v)} />
           </Field>
           <Field label={t('common.from')}>
-            <input type="time" step={300} value={from} onChange={(e) => setFrom(e.target.value)} />
+            <TimeInput value={from} onChange={(v) => setFrom(v)} />
           </Field>
           <Field label={t('common.to')}>
-            <input type="time" step={300} value={to} onChange={(e) => setTo(e.target.value)} />
+            <TimeInput value={to} onChange={(v) => setTo(v)} />
           </Field>
           <Field label={t('common.people')}>
             <input type="number" min={1} max={200} value={people} onChange={(e) => setPeople(Math.max(1, Number(e.target.value) || 1))} style={{ width: 90 }} />
@@ -104,7 +105,7 @@ export function RoomsPage({ onBehalf = false }: { onBehalf?: boolean }) {
 
       <ErrorBox error={rooms.error} onRetry={rooms.reload} />
       {rooms.loading && !rooms.data && <Spinner />}
-      {rooms.data && <p className="muted small">{t('rooms.results', { n: list.length })}</p>}
+      {rooms.data && <p className="muted small">{list.length === 1 ? t('rooms.resultsOne') : t('rooms.results', { n: list.length })}</p>}
       {rooms.data && list.length === 0 && <div className="card empty">{t('rooms.noResults')}</div>}
       <div className="grid grid-3" style={{ opacity: rooms.loading ? 0.6 : 1 }}>
         {list.map((r) => (

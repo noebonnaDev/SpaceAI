@@ -82,6 +82,7 @@ export const it = {
     finestra: 'Vicino alla finestra',
   },
   kinds: { room: 'Sala riunioni', desk: 'Postazione', asset: 'Risorsa condivisa' },
+  kindsPlural: { room: 'sale riunioni', desk: 'postazioni', asset: 'risorse condivise', all: 'risorse' },
   status: {
     pending: 'In attesa di conferma',
     confirmed: 'Confermata',
@@ -169,6 +170,7 @@ export const it = {
     filters: 'Filtri',
     onlyAvailable: 'Solo disponibili',
     results: '{n} sale',
+    resultsOne: '1 sala',
     noResults: 'Nessuna sala corrisponde ai filtri.',
     bookTitle: 'Prenota {name}',
   },

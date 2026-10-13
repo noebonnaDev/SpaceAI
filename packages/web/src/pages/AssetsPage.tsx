@@ -5,6 +5,7 @@ import { ErrorBox, Features, Field, Spinner, useAsync } from '../components/ui';
 import { addMinutesToTime, localToIso, nextQuarter, todayLocal } from '../format';
 import { t } from '../i18n';
 import { useSession } from '../session';
+import { DateInput, TimeInput } from '../components/DateTime';
 
 /** Shared resources (projectors, company cars, kits...). */
 export function AssetsPage() {
@@ -28,13 +29,13 @@ export function AssetsPage() {
       </div>
       <section className="card row">
         <Field label={t('common.date')}>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <DateInput value={date} onChange={(v) => setDate(v)} />
         </Field>
         <Field label={t('common.from')}>
-          <input type="time" step={300} value={from} onChange={(e) => setFrom(e.target.value)} />
+          <TimeInput value={from} onChange={(v) => setFrom(v)} />
         </Field>
         <Field label={t('common.to')}>
-          <input type="time" step={300} value={to} onChange={(e) => setTo(e.target.value)} />
+          <TimeInput value={to} onChange={(v) => setTo(v)} />
         </Field>
       </section>
       <ErrorBox error={assets.error} onRetry={assets.reload} />

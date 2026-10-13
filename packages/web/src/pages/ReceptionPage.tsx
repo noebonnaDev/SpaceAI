@@ -5,6 +5,7 @@ import { fmtTime, todayLocal } from '../format';
 import { t } from '../i18n';
 import { useSession } from '../session';
 import { RoomsPage } from './RoomsPage';
+import { DateInput } from '../components/DateTime';
 
 /** Reception desk: the day's bookings across all resources and booking on behalf of colleagues. */
 export function ReceptionPage() {
@@ -21,7 +22,7 @@ export function ReceptionPage() {
         <div className="card-title">
           <h2>{t('reception.today')}</h2>
           <Field label={t('common.date')}>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <DateInput value={date} onChange={(v) => setDate(v)} />
           </Field>
         </div>
         <ErrorBox error={day.error} onRetry={day.reload} />

@@ -2,9 +2,10 @@ import type { BuildingDto, DeskMapEntry, ResourceDto } from '@ritrovo/shared';
 import { useEffect, useState } from 'react';
 import { BookingDialog } from '../components/BookingDialog';
 import { ErrorBox, Features, Field, Spinner, useAsync, useToast } from '../components/ui';
-import { fmtTime, localToIso, todayLocal } from '../format';
+import { fmtTime, localToIso, nextQuarter, todayLocal } from '../format';
 import { t } from '../i18n';
 import { useSession } from '../session';
+import { DateInput, TimeInput } from '../components/DateTime';
 
 interface ColleagueHit {
   userId: string;
@@ -25,7 +26,8 @@ export function DesksPage() {
   const floors = (buildings.data ?? []).flatMap((b) => b.floors.map((f) => ({ ...f, buildingName: b.name })));
   const [floorId, setFloorId] = useState('');
   const [date, setDate] = useState(todayLocal());
-  const [from, setFrom] = useState('09:00');
+  // Today the day starts from the next quarter hour once 09:00 has passed.
+  const [from, setFrom] = useState(() => (nextQuarter() > '09:00' && nextQuarter() < '18:00' ? nextQuarter() : '09:00'));
   const [to, setTo] = useState('18:00');
   const [selected, setSelected] = useState<DeskMapEntry | null>(null);
   const [booking, setBooking] = useState<ResourceDto | null>(null);
@@ -93,13 +95,20 @@ export function DesksPage() {
             </select>
           </Field>
           <Field label={t('common.date')}>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <DateInput
+              value={date}
+              min={todayLocal()}
+              onChange={(v) => {
+                setDate(v);
+                setFrom(v === todayLocal() && nextQuarter() > '09:00' ? nextQuarter() : '09:00');
+              }}
+            />
           </Field>
           <Field label={t('common.from')}>
-            <input type="time" step={300} value={from} onChange={(e) => setFrom(e.target.value)} />
+            <TimeInput value={from} onChange={(v) => setFrom(v)} />
           </Field>
           <Field label={t('common.to')}>
-            <input type="time" step={300} value={to} onChange={(e) => setTo(e.target.value)} />
+            <TimeInput value={to} onChange={(v) => setTo(v)} />
           </Field>
           <span className="spacer" />
           <Field label={t('desks.findColleague')}>
@@ -134,7 +143,7 @@ export function DesksPage() {
             <div className="floormap" style={{ opacity: desks.loading ? 0.6 : 1 }}>
               <img src={`/api/floors/${floor.id}/map?v=${floor.mapVersion ?? ''}`} alt={`${t('desks.map')} ${floor.name}`} />
               {entries
-                .filter((e) => e.resource.mapX !== null && e.resource.mapY !== null)
+                .filter((e) => e.resource.kind === 'desk' && e.resource.mapX !== null && e.resource.mapY !== null)
                 .map((e) => (
                   <button
                     key={e.resource.id}
